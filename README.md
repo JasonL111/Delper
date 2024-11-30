@@ -22,7 +22,8 @@ D_Helper
   --help: print help information
   -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it.
   -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.
-  -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec. After compression, delete the original videos that do not contain '_LRF' in their names.
+  -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec.
+  -d: Delete all videos in LRF directory which do not contain '_LRF' in their names. It will move the files to the Recycle Bin instead of permanently deleting them.
 ```
 
 ## Notice
