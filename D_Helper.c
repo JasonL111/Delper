@@ -24,7 +24,8 @@ int main(int argc, char *argv[]) {
         printf("This program provides the following functions to organize and process LRF files:\n");
         printf("    -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it.\n");
         printf("    -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.\n");
-        printf("    -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec. After compression, delete the original videos that do not contain '_LRF' in their names.\n");
+        printf("    -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec.\n");
+        printf("    -d: Delete all videos in LRF directory which do not contain '_LRF' in their names.");
     } else if (strcmp(argv[1], "-m") == 0) {
         printf("Moving LRF files...\n");
         move();
@@ -34,7 +35,12 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[1], "-t") == 0) {
         printf("Changing file extensions of all LRF files to MP4...\n");
         name();
-    } else {
+    } 
+    else if (strcmp(argv[1], "-d") == 0) {
+        printf("Deleting videos...\n");
+        delete_non_LRF_files_safe();
+    }
+    else {
         printf("Unknown command: %s\n", argv[1]);
     }
 
@@ -174,7 +180,6 @@ void compress() {
     } while (_findnext(handle, &file_info) == 0);
 
     _findclose(handle);
-    delete_non_LRF_files_safe();
 }
 
 void delete_non_LRF_files_safe() {
