@@ -6,7 +6,6 @@
 #include <windows.h> 
 #include <shlobj.h>   
 #include <errno.h>    
-
 // Function declarations
 void move();
 void compress();
@@ -26,6 +25,7 @@ int main(int argc, char *argv[]) {
         printf("    -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.\n");
         printf("    -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec.\n");
         printf("    -d: Delete all videos in LRF directory which do not contain '_LRF' in their names.");
+        printf("    -o: One press do the all jobs.");
     } else if (strcmp(argv[1], "-m") == 0) {
         printf("Moving LRF files...\n");
         move();
@@ -37,6 +37,17 @@ int main(int argc, char *argv[]) {
         name();
     } 
     else if (strcmp(argv[1], "-d") == 0) {
+        printf("Deleting videos...\n");
+        delete_non_LRF_files_safe();
+    }
+    else if (strcmp(argv[1], "-o") == 0)
+    {
+        printf("Moving LRF files...\n");
+        move();
+        printf("Compressing files in the LRF directory using H265...\n");
+        compress();
+        printf("Changing file extensions of all LRF files to MP4...\n");
+        name();        
         printf("Deleting videos...\n");
         delete_non_LRF_files_safe();
     }
@@ -191,19 +202,22 @@ void delete_non_LRF_files_safe() {
     }
 
     do {
+        if (strcmp(file_info.name, ".") == 0 || strcmp(file_info.name, "..") == 0) {
+            continue;
+        }
+        if (file_info.attrib & _A_SUBDIR) {
+            continue;
+        }
         if (strstr(file_info.name, "_LRF") == NULL) {
-            char file_path[MAX_PATH + 2] = {0}; // +2 for double null terminator
-            snprintf(file_path, sizeof(file_path) - 2, "LRF\\%s", file_info.name);
-
-            // Ensure double null terminator
+            char file_path[MAX_PATH + 2] = {0};
+            snprintf(file_path, sizeof(file_path) - 1, "LRF\\%s", file_info.name);
             size_t len = strlen(file_path);
-            file_path[len + 1] = '\0'; // Second null character
-
+            file_path[len] = '\0';
+            file_path[len + 1] = '\0'; 
             SHFILEOPSTRUCT file_op = {0};
             file_op.wFunc = FO_DELETE;
             file_op.pFrom = file_path;
             file_op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION;
-
             if (SHFileOperation(&file_op) == 0) {
                 printf("Moved to recycle bin: %s\n", file_path);
             } else {
@@ -211,6 +225,6 @@ void delete_non_LRF_files_safe() {
             }
         }
     } while (_findnext(handle, &file_info) == 0);
-
     _findclose(handle);
 }
+
