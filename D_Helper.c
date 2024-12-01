@@ -24,8 +24,8 @@ int main(int argc, char *argv[]) {
         printf("    -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it.\n");
         printf("    -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.\n");
         printf("    -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec.\n");
-        printf("    -d: Delete all videos in LRF directory which do not contain '_LRF' in their names.");
-        printf("    -o: One press do the all jobs.");
+        printf("    -d: Delete all videos in LRF directory which do not contain '_LRF' in their names.\n");
+        printf("    -o: One press do the all jobs.\n");
     } else if (strcmp(argv[1], "-m") == 0) {
         printf("Moving LRF files...\n");
         move();
@@ -44,10 +44,10 @@ int main(int argc, char *argv[]) {
     {
         printf("Moving LRF files...\n");
         move();
-        printf("Compressing files in the LRF directory using H265...\n");
-        compress();
         printf("Changing file extensions of all LRF files to MP4...\n");
         name();        
+        printf("Compressing files in the LRF directory using H265...\n");
+        compress();
         printf("Deleting videos...\n");
         delete_non_LRF_files_safe();
     }
@@ -183,8 +183,7 @@ void compress() {
         snprintf(output_file, sizeof(output_file), "LRF\\%s_LRF.mp4", file_name_no_ext);
 
         snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
-            "ffmpeg -i \"%s\" -c:v libx265 -b:v 3M -threads 4 -c:a copy \"%s\"", input_file, output_file);
-
+            "ffmpeg -i \"%s\" -c:v hevc_nvenc -b:v 3M -c:a copy \"%s\"", input_file, output_file);
         printf("Compressing: %s -> %s\n", input_file, output_file);
         execute_command(ffmpeg_cmd);
 
