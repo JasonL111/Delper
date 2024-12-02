@@ -18,10 +18,10 @@ int main(int argc, char *argv[]) {
         printf("Usage: %s <command>\n", argv[0]);
         return 1;
     }
-
+    
     if (strcmp(argv[1], "--help") == 0) {
         printf("This program provides the following functions to organize and process LRF files:\n");
-        printf("    -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it.\n");
+        printf("    -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it. Then move other file into 'MP4' directory.\n");
         printf("    -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.\n");
         printf("    -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec.\n");
         printf("    -d: Delete all videos in LRF directory which do not contain '_LRF' in their names.\n");
@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
         compress();
         printf("Deleting videos...\n");
         delete_non_LRF_files_safe();
+        printf("All jobs done successful\n");
     }
     else {
         printf("Unknown command: %s\n", argv[1]);
@@ -80,35 +81,44 @@ void execute_command(const char *cmd) {
 }
 
 void move() {
+    // Create directories for LRF and other files
     if (_mkdir("LRF") == -1 && errno != EEXIST) {
-        printf("Failed to create directory 'LRF'.\n");
+        perror("Failed to create directory 'LRF'");
+        return;
+    }
+    if (_mkdir("MP4") == -1 && errno != EEXIST) {
+        perror("Failed to create directory 'MP4'");
         return;
     }
 
-    // Find .LRF and .lrf files and move them
     struct _finddata_t file_info;
-    intptr_t handle = _findfirst("*.LRF", &file_info);
+    intptr_t handle = _findfirst("*.*", &file_info);
     if (handle == -1) {
-        handle = _findfirst("*.lrf", &file_info);
-        if (handle == -1) {
-            printf("No .LRF files found.\n");
-            return;
-        }
+        printf("No files found.\n");
+        return;
     }
-
     do {
-        const char *ext = strrchr(file_info.name, '.');
-        if (ext && (_stricmp(ext, ".LRF") == 0)) {
-            char src_path[MAX_PATH];
-            char dest_path[MAX_PATH];
-            snprintf(src_path, sizeof(src_path), "%s", file_info.name);
-            snprintf(dest_path, sizeof(dest_path), "LRF\\%s", file_info.name);
-            if (rename(src_path, dest_path) == 0) {
-                printf("Moved file: %s -> %s\n", src_path, dest_path);
-            } else {
-                printf("Failed to move file: %s\n", src_path);
-            }
+        if (file_info.attrib & _A_SUBDIR) {
+            continue;
         }
+
+        const char *ext = strrchr(file_info.name, '.');
+        char src_path[MAX_PATH];
+        char dest_path[MAX_PATH];
+        snprintf(src_path, sizeof(src_path), "%s", file_info.name);
+
+        if (ext && _stricmp(ext, ".LRF") == 0) {
+            snprintf(dest_path, sizeof(dest_path), "LRF\\%s", file_info.name);
+        } else {
+            snprintf(dest_path, sizeof(dest_path), "MP4\\%s", file_info.name);
+        }
+
+        if (rename(src_path, dest_path) == 0) {
+            printf("Moved file: %s -> %s\n", src_path, dest_path);
+        } else {
+            perror("Failed to move file");
+        }
+
     } while (_findnext(handle, &file_info) == 0);
 
     _findclose(handle);
