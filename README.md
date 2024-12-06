@@ -3,7 +3,7 @@
 ## Description
 
 This is a C program designed to organize and process `.LRF` files created by DJI devices. It provides the following functionalities:
-- Create a directory named `LRF` and move all `.LRF` files into it.
+- Create a directory named `LRF` and move all `.LRF` files into it. Then move others into directory named `MP4`.
 - Rename all `.LRF` files in the `LRF` directory to have the `.MP4` extension.
 - Compress all `.MP4` files in the `LRF` directory using the H265 codec and remove the original files that do not contain `_LRF` in their names.
 
@@ -18,7 +18,7 @@ Default LRF files use the H264 codec, which tends to be space-consuming. With th
 
 ## Usage
 ```
-D_Helper
+Delper
   --help: print help information
   -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it.
   -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.

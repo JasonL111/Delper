@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     
     if (strcmp(argv[1], "--help") == 0) {
         printf("This program provides the following functions to organize and process LRF files:\n");
-        printf("    -m: Create a directory named 'LRF' in the current directory and move all .LRF files into it. Then move other file into 'MP4' directory.\n");
+        printf("    -m: Create an 'LRF' directory and move all .LRF files into it, then move all other files into 'MP4'.\n");
         printf("    -t: Rename all LRF files in the 'LRF' directory to have an .MP4 extension.\n");
         printf("    -c: Compress all MP4 videos in the 'LRF' directory using the H265 codec.\n");
         printf("    -d: Delete all videos in LRF directory which do not contain '_LRF' in their names.\n");
@@ -138,7 +138,6 @@ void name() {
 
         const char *ext = strrchr(file_info.name, '.');
         if (!ext || _stricmp(ext, ".mp4") != 0) {
-            // Remove existing extension (if any)
             char file_name_no_ext[MAX_PATH];
             if (ext) {
                 size_t len = ext - file_info.name;
@@ -163,6 +162,43 @@ void name() {
 }
 
 void compress() {
+    FILE *fp = _popen("ffmpeg -encoders 2>&1", "r");
+    int have_nvenc = 0, have_amf = 0, have_qsv = 0;
+    char line[1024];
+
+    if (fp) {
+        while (fgets(line, sizeof(line), fp)) {
+            if (strstr(line, " hevc_nvenc")) {
+                have_nvenc = 1;
+            } else if (strstr(line, " hevc_amf")) {
+                have_amf = 1;
+            } else if (strstr(line, " hevc_qsv")) {
+                have_qsv = 1;
+            }
+        }
+        _pclose(fp);
+    }
+
+    const char *encoder = "libx265";
+    int is_hardware = 0;
+    if (have_nvenc) {
+        encoder = "hevc_nvenc";
+        is_hardware = 1;
+    } else if (have_amf) {
+        encoder = "hevc_amf";
+        is_hardware = 1;
+    } else if (have_qsv) {
+        encoder = "hevc_qsv";
+        is_hardware = 1;
+    }
+
+    char video_params[256];
+    if (is_hardware) {
+        snprintf(video_params, sizeof(video_params), "-c:v %s -b:v 3M -c:a copy", encoder);
+    } else {
+        strcpy(video_params, "-c:v libx265 -crf 28 -preset medium -c:a copy");
+    }
+
     struct _finddata_t file_info;
     intptr_t handle = _findfirst("LRF\\*.mp4", &file_info);
     if (handle == -1) {
@@ -182,7 +218,6 @@ void compress() {
             continue;
         }
 
-        // Remove extension
         char file_name_no_ext[MAX_PATH];
         strcpy(file_name_no_ext, file_info.name);
         char *dot = strrchr(file_name_no_ext, '.');
@@ -193,13 +228,18 @@ void compress() {
         snprintf(output_file, sizeof(output_file), "LRF\\%s_LRF.mp4", file_name_no_ext);
 
         snprintf(ffmpeg_cmd, sizeof(ffmpeg_cmd),
-            "ffmpeg -i \"%s\" -c:v hevc_nvenc -b:v 3M -c:a copy \"%s\"", input_file, output_file);
+                 "ffmpeg -i \"%s\" %s \"%s\"", input_file, video_params, output_file);
+
         printf("Compressing: %s -> %s\n", input_file, output_file);
         execute_command(ffmpeg_cmd);
 
     } while (_findnext(handle, &file_info) == 0);
 
     _findclose(handle);
+
+    if (!is_hardware) {
+        printf("No supported GPU hardware encoder found, used CPU (libx265) instead.\n");
+    }
 }
 
 void delete_non_LRF_files_safe() {
