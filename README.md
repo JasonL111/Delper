@@ -1,4 +1,4 @@
-# D_Helper
+# Delper
 
 ## Description
 
@@ -13,7 +13,7 @@ Default LRF files use the H264 codec, which tends to be space-consuming. With th
 ## Instalation
 1. Download the released exe file.
 2. Download FFmpeg
-3. Add the D_Helper.exe's path into your PATH environment variable.
+3. Add the Delper.exe's path into your PATH environment variable.
 4. Then you can use it.
 
 ## Usage
