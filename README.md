@@ -1,5 +1,5 @@
 # Delper
-一键优化你的LRF文件
+一键优化你的LRF文件  
 [English](https://github.com/JasonL111/Delper/blob/main/README.en.md)
 ## 简介
 

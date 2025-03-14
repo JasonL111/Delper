@@ -1,5 +1,5 @@
 # Delper
-Optimize your LRF files with one click
+Optimize your LRF files with one click  
 [中文](https://github.com/JasonL111/Delper/blob/main/README.md)
 ## Description
 
